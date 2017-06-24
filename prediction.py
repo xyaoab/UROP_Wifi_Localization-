@@ -50,7 +50,7 @@ def runRegression(file_name='predictionData1.txt',plot=True):
     m_load.initialize_parameter() # Initialize the parameters (connect the parameters up)
     m_load[:] = np.load('model_save.npy') # Load the parameters
     m_load.update_model(True) # Call the algebra only once
-    Xpredict = m_load.predict(Y[:])[0]
+    Xpredict = m_load.predict(Ypredict[:])[0]
     print ('Predicted Position')
     print Xpredict[:]
     if plot:
