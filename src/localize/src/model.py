@@ -39,35 +39,36 @@ class Model:
 		variance = []
 		for i in range(self.rssi):
 			mean.append(self.m[i].predict(self.test_X)[0])
-			## try to solve the negative variance problem caused by the sparsity of the data
-			#cov = self.m[i].kern.K(self.m[i].X)+np.eye(self.m[i].X.shape[0])*self.m[i].likelihood.variance.values
-			#kfs = self.m[i].kern.K(self.m[i].X, self.test_X)
-			#kss = self.m[i].kern.Kdiag(self.test_X)
-			#var = kss -  (kfs*GPy.util.linalg.dpotrs(self.m[i].posterior.woodbury_chol, kfs)[0]).sum(0)
-			#print ("min",var.min())
-			#print("shape",var.shape)
-			#print("variance", var)
-			#variance.append(var)
+			# try to solve the negative variance problem caused by the sparsity of the data
+			# cov = self.m[i].kern.K(self.m[i].X)+np.eye(self.m[i].X.shape[0])*self.m[i].likelihood.variance.values
+			# kfs = self.m[i].kern.K(self.m[i].X, self.test_X)
+			# kss = self.m[i].kern.Kdiag(self.test_X)
+			# var = kss -  (kfs*GPy.util.linalg.dpotrs(self.m[i].posterior.woodbury_chol, kfs)[0]).sum(0)
+			# print ("min",var.min())
+			# print("shape",var.shape)
+			# print("variance", var)
+			# variance.append(var)
 			variance.append(self.m[i].predict(self.test_X)[1])
 
 		prob = np.ndarray((self.rssi,self.test_X.shape[0]))
 
 		for j in range(self.rssi):
-				prob[j]= scipy.stats.norm(mean[j], variance[j] **.5).pdf(test_strength[j]).reshape(1,-1)
+				prob[j]= scipy.stats.norm(mean[j], np.abs(variance[j]) **.5).pdf(test_strength[j]).reshape(1,-1)
 		return prob
 
 
 	def bayes_filter(self, prob, test_strength,test_pos=None):
 		self.belief= prob * self.predict(test_strength)
 		self.belief = self.belief / self.belief.sum(axis=0)
-		print(self.belief)
+		#print(self.belief)
 		#print("average", np.cumprod(self.belief, axis=0).shape)
 
 		#self.predict_pos = self.test_X[np.argmax(np.cumprod(self.belief, axis=0)[-1]  ** (1/self.rssi))]
 		self.predict_pos = self.test_X[np.argmax(np.average(self.belief, axis=0))]
-		print("predict+pos", self.predict_pos)
+		print("predict pos", self.predict_pos)
 		if test_pos is not None:
 			sse = ((self.predict_pos - test_pos)**2).sum()
+			print("actual pos", test_pos)
 			print("sse", sse)
 		
 
@@ -86,5 +87,5 @@ if __name__ == '__main__':
 	test_strength =  d.get_vali()[1]
 	print ("test_strength",test_strength)
 	for i in range(test_pos.shape[0]):
-		model_list.bayes_filter(model_list.belief, test_strength[i],test_pos[i])
+		model_list.bayes_filter(model_list.belief, test_strength[i],test_pos[0])
 

@@ -6,7 +6,7 @@ from collections import Counter
 import os 
 
 class DataLoader:
-	def __init__(self, file_name,num=3):
+	def __init__(self, file_name,num=6):
 		self.pos = np.genfromtxt(file_name, usecols=(1,2), delimiter=",")
 		macaddress = np.genfromtxt(file_name, usecols=(5,7,9,11,13,15,17,19,21),delimiter=",",dtype=str)
 		unsorted_strength = np.genfromtxt(file_name, usecols=(6,8,10,12,14,16,18,20,22),delimiter=",")
@@ -15,11 +15,13 @@ class DataLoader:
 		
 		self.strength = np.empty([macaddress.shape[0],num])
 		
-		addresses = np.unique(macaddress)
+		addresses = macaddress.flatten()
+		#print("addresses",addresses)
 		counter = Counter(addresses)
 		list_tuples = counter.most_common(num)
-		self.addresses = [tuples[0] for tuples in list_tuples]
-		print("sorted address", addresses)
+		print("counter", list_tuples)
+		self.addresses = [tuples[0] for tuples in list_tuples][:]
+
 		for i in range(macaddress.shape[0]):
 			index = self.bssid_sorted(self.addresses, macaddress[i], num)
 			self.strength[i] = cat_strength[i][index]
@@ -54,12 +56,12 @@ class DataLoader:
 
 	def get_train(self):
 		return self.train_pos, self.train_strength
-		#return self.pos[:-30,], self.strength[:-30,]
+		#return self.pos[:], self.strength[:]
 
 	def get_test(self):
 		return self.test_pos, self.test_strength
 	def get_vali(self):
-		return self.pos[113:126], self.strength[113:126]
+		return self.pos[45:51], self.strength[45:51]
 if __name__ == '__main__':
 	dir = os.path.dirname(os.path.realpath(__file__))
 	file_name = dir + '/training_wifi.csv'
